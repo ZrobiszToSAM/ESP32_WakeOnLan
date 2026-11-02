@@ -1,6 +1,6 @@
 /*
  * Projekt: ESP32 Telegram Wake-On-LAN
- * Wersja: 2.5
+ * Wersja: 2.7 (Test OTA - Poprawki UI)
  * Autorzy: Zrobisz To SAM 2026 x Gemini AI
  */
 
@@ -14,6 +14,11 @@
 #include <Preferences.h>
 #include <time.h> 
 #include <ESPping.h> 
+#include <HTTPClient.h>
+#include <HTTPUpdate.h>
+
+// --- WERSJA OPROGRAMOWANIA (Do sprawdzania OTA) ---
+#define CURRENT_FIRMWARE_VERSION 2.7 
 
 // --- KONFIGURACJA PRZYCISKÓW I DIOD ---
 #define LED_PIN 48       
@@ -55,7 +60,7 @@ String requestingChatId = "";
 // SYSTEM MENU: 2 RÓŻNE KLAWIATURY
 // ==========================================
 String mainKeyboard = "[[\"⚡ WAKE\"],[\"📊 /info\", \"🔍 /ping\"],[\"🛠️ /settings\"]]";
-String settingsKeyboard = "[[\"⚙️ /config\", \"🔄 /reset\"],[\"⬅️ Powrót\"]]";
+String settingsKeyboard = "[[\"🚀 /update\", \"⚙️ /config\"],[\"🔄 /reset\", \"⬅️ Powrót\"]]";
 
 Preferences preferences;
 WiFiClientSecure secured_client;
@@ -133,6 +138,63 @@ void sendWakeOnLan() {
   udp.beginPacket(broadcastIp, 9); udp.write(magicPacket, 102); udp.endPacket();
 }
 
+// ==========================================
+// FUNKCJA AKTUALIZACJI OTA PRZEZ GITHUB
+// ==========================================
+void performOTAUpdate(String chat_id) {
+  bot->sendMessage(chat_id, "🔄 Łączę z serwerem GitHub i sprawdzam aktualizacje...", "");
+  
+  WiFiClientSecure otaClient;
+  otaClient.setInsecure();
+
+  HTTPClient http;
+  String versionUrl = "https://raw.githubusercontent.com/ZrobiszToSAM/ESP32_WakeOnLan/refs/heads/main/Update/bin/version.txt";
+
+  http.begin(otaClient, versionUrl);
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  int httpCode = http.GET();
+
+  if (httpCode == 200) {
+    String payload = http.getString();
+    payload.trim();
+    float remoteVersion = payload.toFloat();
+
+    if (remoteVersion > CURRENT_FIRMWARE_VERSION) {
+      bot->sendMessage(chat_id, "🚀 Znaleziono nową wersję (V" + String(remoteVersion) + ")! Pobieram i instaluję pliki. Moduł zrestartuje się za kilkanaście sekund...", "");
+
+      String binUrl = "https://raw.githubusercontent.com/ZrobiszToSAM/ESP32_WakeOnLan/refs/heads/main/Update/bin/firmware_";
+
+      #if CONFIG_IDF_TARGET_ESP32
+        binUrl += "esp32.bin";
+      #elif CONFIG_IDF_TARGET_ESP32S3
+        binUrl += "esp32s3.bin";
+      #else
+        bot->sendMessage(chat_id, "❌ Błąd: Procesor Twojej płytki nie jest obsługiwany przez tę aktualizację.", "");
+        http.end();
+        return;
+      #endif
+
+      t_httpUpdate_return ret = httpUpdate.update(otaClient, binUrl);
+
+      switch (ret) {
+        case HTTP_UPDATE_FAILED:
+          bot->sendMessage(chat_id, "❌ Błąd aktualizacji: " + httpUpdate.getLastErrorString(), "");
+          break;
+        case HTTP_UPDATE_NO_UPDATES:
+          bot->sendMessage(chat_id, "ℹ️ Brak nowych aktualizacji na serwerze.", "");
+          break;
+        case HTTP_UPDATE_OK:
+          break;
+      }
+    } else {
+      bot->sendMessage(chat_id, "✅ Posiadasz już najnowszą wersję programu (V" + String(CURRENT_FIRMWARE_VERSION) + ").", "");
+    }
+  } else {
+    bot->sendMessage(chat_id, "❌ Błąd połączenia z serwerem aktualizacji. Kod HTTP: " + String(httpCode), "");
+  }
+  http.end();
+}
+
 void clearOldMessages() {
   int numNewMessages = bot->getUpdates(bot->last_message_received + 1);
   while(numNewMessages) {
@@ -150,18 +212,15 @@ void handleNewMessages(int numNewMessages) {
       bot->sendMessage(chat_id, "Brak autoryzacji!", ""); ledBlinkAngryRed(); continue; 
     }
 
-    // 1. EKRAN GŁÓWNY (START & POWRÓT)
     if (text == "/start" || text == "⬅️ Powrót") {
       String msg = (text == "⬅️ Powrót") ? "Wróciłeś do menu głównego." : "Wybierz akcję z menu poniżej:";
       bot->sendMessageWithReplyKeyboard(chat_id, msg, "", mainKeyboard);
     }
-    // 2. WAKE
     else if (text == "WAKE" || text == "wake" || text == "⚡ WAKE") {
       bot->sendMessage(chat_id, "Wysyłam pakiet! Oczekuję na uruchomienie systemu...", "");
       ledFadeInGreen(); sendWakeOnLan();  
       if (String(pc_ip_str).length() > 6) { pingActive = true; pingStartTime = millis(); lastPingTime = 0; requestingChatId = chat_id; }
     }
-    // 3. PING
     else if (text == "/ping" || text == "🔍 /ping") {
       if (String(pc_ip_str).length() > 6) {
         bot->sendMessage(chat_id, "📡 Sprawdzam połączenie z komputerem...", "");
@@ -172,13 +231,15 @@ void handleNewMessages(int numNewMessages) {
         } else bot->sendMessage(chat_id, "❌ Błąd formatu IP. Ustaw poprawny przez /setip.", "");
       } else bot->sendMessage(chat_id, "⚠️ Funkcja Ping jest niedostępna (brak IP). Wejdź w Ustawienia (/settings).", "");
     }
-    // 4. INFO
     else if (text == "/info" || text == "📊 /info") {
       unsigned long upSeconds = millis() / 1000; int upDays = upSeconds / 86400; int upHours = (upSeconds % 86400) / 3600; int upMins = (upSeconds % 3600) / 60;
-      String info_msg = "🤖 Raport Systemowy (V2.5)\n----------------------------\n";
+      
+      // ZMODYFIKOWANY UKŁAD WIADOMOŚCI /INFO
+      String info_msg = "🤖 Raport Systemowy\n----------------------------\n";
+      info_msg += "Wersja systemu: V" + String(CURRENT_FIRMWARE_VERSION) + "\n";
       info_msg += "Sieć WiFi: " + WiFi.SSID() + " (" + String(WiFi.RSSI()) + " dBm)\n";
       info_msg += "Lokalny IP: " + WiFi.localIP().toString() + "\n";
-      info_msg += "Tryb WOL: " + String(wol_target_str) + "\n"; // Tutaj znajduje się aktualny tryb wysyłania!
+      info_msg += "Tryb WOL: " + String(wol_target_str) + "\n"; 
       if(String(pc_ip_str).length() > 6) {
          info_msg += "IP Celu (Ping): " + String(pc_ip_str) + "\n";
          IPAddress tgt; tgt.fromString(pc_ip_str);
@@ -192,20 +253,21 @@ void handleNewMessages(int numNewMessages) {
     }
     
     // ==========================================
-    // 5. EKRAN USTAWIEŃ (SUB-MENU)
+    // EKRAN USTAWIEŃ
     // ==========================================
     else if (text == "/settings" || text == "🛠️ /settings") {
       String set_msg = "🛠️ *MENU USTAWIEŃ*\n\n";
-      set_msg += "👉 *Portal Konfiguracyjny (Przycisk pod spodem)*:\n";
-      set_msg += "Uruchamia panel przez przeglądarkę, by edytować MAC, Tokeny i sieć Wi-Fi.\n\n";
-      set_msg += "👉 *Szybkie zmiany przez czat (Wpisz komendę ręcznie)*:\n";
+      set_msg += "👉 *Szybkie komendy panelu dolnego*:\n";
+      set_msg += "🚀 `/update` - Sprawdza na GitHubie czy są dostępne aktualizacje kodu i instaluje je automatycznie.\n";
+      set_msg += "⚙️ `/config` - Uruchamia Portal przez przeglądarkę (192.168.4.1).\n\n";
+      set_msg += "👉 *Zmiany przez czat (Wpisz ręcznie)*:\n";
       set_msg += "🔹 `/setip [adres_ip]` - IP do pingu (np. `/setip 192.168.1.50`). Wpisz `none` aby wyłączyć.\n";
       set_msg += "🔹 `/settime [HH:MM]` - Godzina cichego restartu (np. `/settime 04:30`).\n";
-      set_msg += "🔹 `/setwol [tryb]` - Tryb wysyłania pakietu WOL. Wpisz `/setwol 255` lub `/setwol BCAST`.\n";
+      set_msg += "🔹 `/setwol [tryb]` - Tryb wysyłania (Wpisz `/setwol 255` lub `/setwol BCAST`).\n";
       bot->sendMessageWithReplyKeyboard(chat_id, set_msg, "Markdown", settingsKeyboard);
     }
     
-    // SUB-KOMENDY USTAWIEŃ W CZACIE
+    // KOMENDY USTAWIEŃ
     else if (text.startsWith("/setip ")) {
       String new_ip = text.substring(7); new_ip.trim();
       if (new_ip.equalsIgnoreCase("none")) new_ip = ""; 
@@ -223,10 +285,9 @@ void handleNewMessages(int numNewMessages) {
         bot->sendMessage(chat_id, "✅ Godzina restartu zapisana: " + new_h + ":" + new_m, "");
       } else bot->sendMessage(chat_id, "❌ Błędny format. Użyj: /settime HH:MM (np. /settime 04:30)", "");
     }
-    // NOWA KOMENDA DO WOL
     else if (text.startsWith("/setwol ")) {
       String new_wol = text.substring(8); new_wol.trim();
-      new_wol.toUpperCase(); // Zamienia bcast na BCAST
+      new_wol.toUpperCase(); 
       if (new_wol == "255" || new_wol == "BCAST") {
         new_wol.toCharArray(wol_target_str, 10);
         preferences.begin("wolConfig", false); preferences.putString("wol_tgt", String(wol_target_str)); preferences.end();
@@ -235,8 +296,9 @@ void handleNewMessages(int numNewMessages) {
         bot->sendMessage(chat_id, "❌ Błędna wartość. Wpisz /setwol 255 lub /setwol BCAST", "");
       }
     }
-    
-    // KOMENDY ODPALANE Z EKRANU USTAWIEŃ
+    else if (text == "/update" || text == "🚀 /update") {
+      performOTAUpdate(chat_id);
+    }
     else if (text == "/config" || text == "⚙️ /config") {
       bot->sendMessage(chat_id, "Uruchamiam tryb konfiguracji (192.168.4.1).", "");
       preferences.begin("wolConfig", false); preferences.putBool("force_config", true); preferences.end();
@@ -291,12 +353,16 @@ void setup() {
   p_custom_ip = new WiFiManagerParameter("pc_ip", "IP Komputera (Puste = Wyłącz Ping)", pc_ip_str, 16);
   p_custom_rst_hour = new WiFiManagerParameter("rst_hour", "Godzina restartu (0-23)", restart_hour_str, 3);
   p_custom_rst_min = new WiFiManagerParameter("rst_min", "Minuta restartu (0-59)", restart_minute_str, 3);
-  p_custom_tout = new WiFiManagerParameter("portal_tout", "Czas Portalu Awarii (sek, np. 300)", portal_timeout_str, 5);
+  
+  // ZMODYFIKOWANA ETYKIETA PORTALU KONFIGURACJI
+  p_custom_tout = new WiFiManagerParameter("portal_tout", "Czas Portalu Konfiguracji (sek, np. 300)", portal_timeout_str, 5);
+  
   p_custom_tgt = new WiFiManagerParameter("wol_tgt", "Cel WOL (Wpisz 255 lub BCAST)", wol_target_str, 10);
   p_custom_sil = new WiFiManagerParameter("silent_rst", "Cichy Nocny Restart (1=Tak, 0=Nie)", silent_restart_str, 2);
   p_custom_boot = new WiFiManagerParameter("boot_act", "Przycisk BOOT (Wpisz WAKE lub NONE)", boot_action_str, 10);
   
-  WiFiManagerParameter custom_author("a", "<br><div style='text-align: center; color: #aaa; font-size: 14px;'>Wersja 2.5 (Pro Control)<br>Stworzono przez:<br><b>Zrobisz To SAM 2026 x Gemini AI</b></div>", "", 0, "");
+  String author_html = "<br><div style='text-align: center; color: #aaa; font-size: 14px;'>Wersja " + String(CURRENT_FIRMWARE_VERSION) + " (OTA)<br>Stworzono przez:<br><b>Zrobisz To SAM 2026 x Gemini AI</b></div>";
+  WiFiManagerParameter custom_author("a", author_html.c_str(), "", 0, "");
 
   WiFiManager wm;
   const char* mac_script = "<script>document.addEventListener('DOMContentLoaded',function(){var m=document.getElementById('mac_address');if(m){m.setAttribute('maxlength','17');m.addEventListener('input',function(e){var v=e.target.value.replace(/[^a-fA-F0-9]/g,'').toUpperCase();var r=v.match(/.{1,2}/g);e.target.value=r?r.join(':').substring(0,17):'';});}});</script>";
