@@ -16,6 +16,7 @@ Starałem się upchnąć tu sporo fajnych rozwiązań:
 * 🔍 **Prawdziwe potwierdzenie (Ping):** Potwierdzenie wybudzenia za pomocą funkcji ping.
 * 🛡️ **Blokada przed obcymi:** Bot reaguje tylko na zdefiniowane przez Ciebie Chat ID (możesz dodać 2 osoby). Resztę świata ignoruje, a moduł mruga wtedy ostrzegawczo na czerwono.
 * ⚙️ **Konfigurator przez Wi-Fi:** Moduł przy starcie odpala własną sieć do konfiguracji. Wszystkie dane wpisuje się na stronie konfiguratora. Można na niej również wgrać nową wersję programu przez OTA.
+* ☁️ **Cloud OTA (Aktualizacje z GitHuba):** Wbudowany system automatycznych aktualizacji! Wpisz komendę, a bot sprawdzi na GitHubie, czy jest nowsza wersja. Możesz zaktualizować moduł od razu lub zaplanować to na środek nocy.
 * 🔋 **Odporność na zaniki prądu:** Po utracie prądu, co wiąże się również z utratą Wi-Fi, zamiast zawiesić się na zawsze bez Wi-Fi, po 5 minutach moduł sam się zresetuje i spróbuje ponownie.
 * 🔘 **Przycisk BOOT:** Przycisk na płytce dostał drugie życie. Dłuższe przytrzymanie na starcie robi Factory Reset, a pojedyncze kliknięcie podczas normalnej pracy działa jak fizyczny przycisk włączania PC.
 * 📡 **Zmiana ustawień z czatu:** Zapomniałeś zmienić IP? Zmienisz to komendą w Telegramie, bez wchodzenia w tryb konfiguracji.
@@ -79,11 +80,12 @@ Zanim odpalisz moduł, potrzebujesz dwóch rzeczy z Telegrama: **Tokenu Bota** o
 
 ### 🏠 Menu główne:
 * ⚡ **WAKE** - Odpala komputer.
-* 📊 **/info** - Wyświetla raport (czas pracy modułu, jakość Wi-Fi, zużycie RAM-u i to, czy PC jest teraz włączony).
+* 📊 **/info** - Wyświetla raport (czas pracy modułu, wersja systemu, jakość Wi-Fi, zużycie RAM-u i to, czy PC jest teraz włączony).
 * 🔍 **/ping** - Szybkie sprawdzenie z czatu, czy komputer działa.
 * 🛠️ **/settings** - Przełącza klawiaturę na drugą stronę (Menu Ustawień).
 
 ### 🛠️ Menu ustawień:
+* 🚀 **/update** - Sprawdza na GitHubie, czy są dostępne aktualizacje kodu (Cloud OTA). Możesz zaktualizować od razu lub zaplanować na noc.
 * ⚙️ **/config** - Odpala z powrotem pomarańczowy portal konfiguracyjny (nie kasuje Twoich obecnych danych).
 * 🔄 **/reset** - **Uwaga!** Twardy reset. Czyści całą pamięć modułu do zera.
 * ⬅️ **Powrót** - Powrót do głównych przycisków.
@@ -92,6 +94,7 @@ Zanim odpalisz moduł, potrzebujesz dwóch rzeczy z Telegrama: **Tokenu Bota** o
 Jeśli chcesz coś szybko zmienić bez wchodzenia w przeglądarkę, możesz wpisać:
 * `/setip [adres_ip]` (np. `/setip 192.168.1.50`) - zmienia adres, który bot będzie pingował. Wpisz `none`, żeby wyłączyć pingowanie.
 * `/settime [HH:MM]` (np. `/settime 04:30`) - zmienia godzinę nocnego, cichego restartu układu.
+* `/setota [HH:MM]` (np. `/setota 03:00`) - zmienia preferowaną godzinę automatycznej instalacji aktualizacji OTA w nocy.
 * `/setwol [255 lub BCAST]` - zmienia tryb rozgłaszania pakietu WOL. Przydatne, jak masz bardzo oporny router.
 
 ---
