@@ -6,6 +6,8 @@ Zależało mi na tym, żeby ESP32 nie było tylko "płytką z kabelkami", ale dz
 
 Kod powstał na potrzeby własne, ale jest również częścią rozwoju kanału **Zrobisz To SAM**.
 
+Link do filmu na temat tego projektu:
+https://youtube.com/shorts/SiOaIhIsQHI?feature=share
 ---
 
 ## ✨ Co potrafi ten kod? (Najciekawsze funkcje)
