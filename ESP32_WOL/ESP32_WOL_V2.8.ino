@@ -1,7 +1,7 @@
 /*
  * Projekt: ESP32 Telegram Wake-On-LAN
  * Wersja: 2.8
- * Autorzy: Zrobisz To SAM 2026 x Gemini AI
+ * Autor: Zrobisz To SAM 
  */
 
 #include <WiFi.h>
