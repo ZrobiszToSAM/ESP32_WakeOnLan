@@ -7,12 +7,12 @@ Zależało mi na tym, żeby ESP32 nie było tylko "płytką z kabelkami", ale dz
 Kod powstał na potrzeby własne, ale jest również częścią rozwoju kanału **Zrobisz To SAM**.
 
 Link do filmu na temat tego projektu:
-https://youtube.com/shorts/SiOaIhIsQHI?feature=share
+https://youtube.com/shorts/x7HdK1091eI?feature=share
 ---
 
-## ✨ Co potrafi ten kod? (Najciekawsze funkcje)
+## ✨ Co potrafi ten kod?
 
-Starałem się upchnąć tu sporo fajnych rozwiązań:
+Starałem się upchnąć tu sporo przydatnych rozwiązań:
 
 * 📱 **Klikalne menu w Telegramie:** Koniec z wpisywaniem komend z palca. Bot ma zagnieżdżone, wirtualne klawiatury – odpalasz bota i po prostu klikasz przycisk "WAKE" albo "Ustawienia".
 * 🔍 **Prawdziwe potwierdzenie (Ping):** Potwierdzenie wybudzenia za pomocą funkcji ping.
