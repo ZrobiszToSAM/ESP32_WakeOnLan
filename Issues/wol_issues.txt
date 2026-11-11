@@ -1,0 +1,28 @@
+⚡ DLACZEGO KOMPUTER SIĘ NIE WŁĄCZA? (Poradnik Wake-On-LAN)
+
+Wake-On-LAN to standard sieciowy przeznaczony do zdalnego włączania lub wybudzania komputera z trybu uśpienia, hibernacji lub całkowitego wyłączenia poprzez wysłanie specjalnie sformatowanej ramki danych (Magic Packet) przez sieć lokalną. Jeżeli komputer nie reaguje na funkcję /wake, przejdź przez te 4 kroki, a rozwiążesz problem:
+
+1️⃣ KABEL TO PODSTAWA!
+Technologia WOL na komputerach stacjonarnych w 95% przypadków działa TYLKO PO KABLU Ethernet. Wybudzanie przez Wi-Fi to rzadkość zarezerwowana dla niektórych nowoczesnych laptopów. Podłącz PC kablem do routera.
+
+2️⃣USTAWIENIA PŁYTY GŁÓWNEJ (BIOS/UEFI)
+Podczas uruchamiania komputera wciskaj Delete lub F2, by wejść do BIOSu.
+👉 Znajdź zakładki "Advanced" lub "Power Management" i upewnij się, że:
+• Opcja "Wake On LAN", "Wake up on PCI-E" lub "Power On By PCI-E" jest WŁĄCZONA.
+• Opcja "ErP Ready" lub "EuP Ready" jest WYŁĄCZONA (Disabled). To funkcja ekologiczna, która po wyłączeniu komputera całkowicie odcina mu prąd z zasilacza.
+
+3️⃣ UKRYTY ZABÓJCA: "SZYBKIE URUCHAMIANIE" W WINDOWS 10/11
+To główny powód, dla którego WOL nie działa. Windows domyślnie w ogóle się nie wyłącza, tylko wchodzi w głęboką hibernację, która odcina prąd karcie sieciowej.
+👉 Rozwiązanie:
+1. Wpisz w lupkę Windowsa "Wybierz plan zasilania" i otwórz.
+2. Po lewej stronie kliknij: "Wybierz działanie przycisków zasilania".
+3. Na samej górze kliknij z tarczą: "Zmień ustawienia, które są obecnie niedostępne".
+4. Na samym dole ODZNACZ pole "Włącz szybkie uruchamianie (Zalecane)" i Zapisz. Komputer będzie włączał się 3 sekundy dłużej, ale WOL wreszcie zadziała.
+
+4️⃣  USTAWIENIA KARTY SIECIOWEJ (WINDOWS)
+Karta sieciowa musi dostać pozwolenie na wybudzenie PC.
+👉 Rozwiązanie:
+1. Kliknij prawym przyciskiem na menu Start -> Menedżer Urządzeń.
+2. Rozwiń "Karty sieciowe" i kliknij dwukrotnie swoją (często Realtek, Intel, Killer).
+3. Zakładka "Zarządzanie energią": Zaznacz "Zezwalaj temu urządzeniu na wznawianie..." ORAZ "Zezwalaj tylko pakietowi Magic...".
+4. Zakładka "Zaawansowane": Znajdź na liście "Wake on Magic Packet", "Uaktywnij na podstawie pakietu Magic" i zmień wartość na Włączone. Znajdź też "Shutdown Wake-On-Lan" i też włącz.

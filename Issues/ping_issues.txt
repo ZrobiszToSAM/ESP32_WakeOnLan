@@ -1,0 +1,26 @@
+📡 DLACZEGO FUNKCJA PING NIE DZIAŁA?
+
+Krótki poradnik "Co zrobić kiedy funkcja /ping nie działa poprawnie?" Funkcja ta jest dopełnieniem funkcjonalności urządzenia o informację zwrotna poczas odpalania. Pozwala nam ona zweryfikować, czy urządzenie faktycznie uruchamia się po dostarczeniu Magic Pakiet. W 99% przypadków problemem nie jest bot, lecz zabezpieczenia systemu lub routera. Oto jak to naprawić:
+
+1️⃣ KOMPUTER MA ZMIENNE IP (PUŁAPKA DHCP)
+Najczęstszy błąd to funkcja DHCP, która co kilka dni dynamicznie zmienia IP twojego urządzenia. Dziś Twój PC może mieć adres końcówkę .15, a jutro .23. Jeśli w Telegramie wpisałeś stary adres, bot krzyczy w pustkę.
+
+👉 Jak to naprawić? -> Musisz ustawić Stałe IP dla swojego komputera:
+
+• Najlepsza metoda: Zaloguj się do swojego routera (często 192.168.1.1) i znajdź zakładkę "Rezerwacja adresów"/"DHCP Binding"/"Static Lease". Znajdź swoje urządzenie z listy i przypisz adres na sztywno do adresu MAC Twojej karty sieciowej.
+• Opcjonalna metoda: Jeśli nie masz dostępu do routera, stały adres możesz wymusić bezpośrednio w ustawieniach Windowsa. Przejdź do ustawień karty sieciowej. Wpisz stały adres IP i zapisz zmiany. Sprawdź tylko pule adresów przypisywanych przez twój router.
+• Zła metoda: Ręczne wpisanie IP w ustawieniach Windowsa. Jeśli wpiszesz tam IP, które leży w "Puli DHCP" routera (np. od .100 do .200), router i tak może w międzyczasie przydzielić to IP np. telefonowi mamy. Powstanie "Konflikt adresów IP" i wywali z sieci oba urządzenia. Jeśli musisz to robić w Windowsie, ustaw adres spoza puli (np. 192.168.1.50).
+
+2️⃣ ZAPORA SYSTEMU WINDOWS BLOKUJE RUCH
+Domyślnie Windows ignoruje pakiety Ping dla bezpieczeństwa urządzenia.
+
+👉 Jak to naprawić: 
+
+Wpisz w lupkę Windowsa "Panel Sterowania" -> Centrum sieci i udostępniania -> Zaawansowane ustawienia udostępniania. Zaznacz opcję "Włącz udostępnianie plików i drukarek". To automatycznie otworzy furtkę dla Pingów.
+
+3️⃣ AGRESYWNY ANTYWIRUS
+Programy takie jak ESET, Avast, Kaspersky czy Bitdefender mają własne, bardzo agresynw zapory sieciowe (Firewalle).
+
+👉 Jak to naprawić: 
+
+Nawet jeśli odblokujesz opcję w Windowsie (krok wyżej), Twój antywirus nadal może to blokować. Musisz wejść w jego ustawienia i poszukać zakładki "Zapora / Firewall", a następnie zezwolić na ruch lokalny ICMP czyli żądanie echa.
