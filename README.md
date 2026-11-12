@@ -108,3 +108,13 @@ Jeśli chcesz coś szybko zmienić bez wchodzenia w przeglądarkę, możesz wpis
 * 🟢 **Zielony (Płynne przejście)** - Wysyłam pakiet Magic Packet.
 * 🔴 **Czerwony (Mruganie)** - Ktoś obcy próbował użyć Twojego bota!
 * 🔴 **Czerwony (Stały)** - Pamięć Flash jest właśnie czyszczona do zera.
+
+---
+
+### Co nowego w wersji V2.9 (Changelog)
+
+- **Nowy panel /settings obsługiwany przez przyciski z podglądem wartości na żywo i auto-odświeżaniem.**
+- **Wydzielone podmenu aktualizacji (OTA) oraz ukryta komenda serwisowa /forceupdate.**
+- **Kontekstowe poradniki naprawy (Ping oraz WOL) pobierane dynamicznie z repozytorium GitHub.**
+- **Pełna kompatybilność z ESP32 i ESP32-S3, optymalizacja pamięci RAM przy połączeniach SSL oraz czas portalu skrócony do 3 minut.**
+- **Rozbudowany Serial USB Debugger z pełnymi logami i obsługą komend lokalnych przez port szeregowy.**
